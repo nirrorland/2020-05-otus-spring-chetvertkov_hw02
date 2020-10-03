@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface QuestionDao {
 
-    List<Question> getQuestionList(String fileName) throws IOException;
+    List<Question> getQuestionList() throws IOException;
 }
