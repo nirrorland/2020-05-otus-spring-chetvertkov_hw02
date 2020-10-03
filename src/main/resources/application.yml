@@ -1,0 +1,3 @@
+application:
+  minscore: 3
+  locale: ru #en / ru

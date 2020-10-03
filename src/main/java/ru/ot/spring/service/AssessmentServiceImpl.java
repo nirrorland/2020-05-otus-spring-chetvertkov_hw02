@@ -1,77 +1,72 @@
 package ru.ot.spring.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.ot.spring.config.YamlConf;
 import ru.ot.spring.dao.QuestionDao;
 import ru.ot.spring.domain.Question;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Scanner;
 
 @Component
 public class AssessmentServiceImpl implements AssessmentService {
 
-    private QuestionDao questionDao;
+    final private QuestionDao questionDao;
+    final private ConsoleIOService consoleIOService;
+    final private YamlConf conf;
 
     private List<Question> questions = null;
 
-    @Value("${filename}")
-    private String fileName;
-
-    @Value("${minscore}")
-    private Integer minScoreCount;
-
     @Autowired
-    public AssessmentServiceImpl(QuestionDao questionDao) {
+    public AssessmentServiceImpl(QuestionDao questionDao, ConsoleIOService consoleIOService, YamlConf conf) {
         this.questionDao = questionDao;
+        this.consoleIOService = consoleIOService;
+        this.conf = conf;
     }
 
     @Override
     public void startAssessment() {
 
         try {
-            questions = questionDao.getQuestionList(fileName);
+            questions = questionDao.getQuestionList();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         if ((questions != null) && (questions.size() > 0)) {
-            System.out.println("Susseccfully read question file");
-            System.out.println("Enter your firstName:");
+            consoleIOService.bundleOut("loadfile.success");
+            consoleIOService.bundleOut("input.firstname");
             String firstName = readAnswer();
-            System.out.println("Enter your lastName:");
+            consoleIOService.bundleOut("input.lastname");
             String lastName = readAnswer();
-            int correctAnswersCounter = 0;
+            consoleIOService.bundleOut("hello", new String[] {firstName, lastName});
 
-            System.out.println("Hello: " + firstName + " " + lastName);
+            Integer correctAnswersCounter = 0;
 
             for (Question question : questions) {
-                System.out.println(question.getText());
-                System.out.println("Enter number of your answer:");
+                consoleIOService.out(question.getText());
+                consoleIOService.bundleOut("answer.number");
                 String answer = readAnswer();
                 if (question.getCorrectAnswer().equals(answer)) {
                     correctAnswersCounter++;
                 }
             }
 
-            System.out.println("Your total score: " + correctAnswersCounter);
+            consoleIOService.bundleOut("total.score", new String[] {correctAnswersCounter.toString()});
 
-            if (correctAnswersCounter >= minScoreCount) {
-                System.out.println("You pass exam");
+            if (correctAnswersCounter >= conf.getMinscore()) {
+                consoleIOService.bundleOut("result.good");
             } else {
-                System.out.println("You failed exam");
+                consoleIOService.bundleOut("result.bad");
             }
 
         } else {
-            System.out.println("Error reading questions from file or it's empty");
+            consoleIOService.bundleOut("loadfile.error");
         }
-
     }
 
-    String readAnswer() {
-        Scanner scanner = new Scanner(System.in);
-        return scanner.nextLine();
+    private String readAnswer() {
+        return consoleIOService.read();
     }
 }

@@ -11,15 +11,22 @@ import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
+import ru.ot.spring.service.FileIOService;
 
 @Component
 public class QuestionDaoImpl implements QuestionDao {
 
+    private final FileIOService fileIOService;
+
+    public QuestionDaoImpl(FileIOService fileIOService) {
+        this.fileIOService = fileIOService;
+    }
+
     @Override
-    public List<Question> getQuestionList(String fileName) throws IOException {
+    public List<Question> getQuestionList() throws IOException {
         List<Question> resultList = new LinkedList<Question>();
 
-        Reader in = new FileReader(getClass().getClassLoader().getResource(fileName).getFile());
+        Reader in = fileIOService.getReader();
         Iterable<CSVRecord> records = CSVFormat.DEFAULT
                 .withDelimiter(';')
                 .parse(in);
